@@ -1,4 +1,5 @@
 CREATE DATABASE Angan_sewa;
+
 use Angan_sewa;
 
 CREATE TABLE users (
@@ -10,6 +11,7 @@ CREATE TABLE users (
     role ENUM('staff', 'manager', 'admin') DEFAULT 'staff',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
 CREATE TABLE services (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -17,21 +19,45 @@ CREATE TABLE services (
     address VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-insert into users(name,email,password) values
-("ram","ram@gmail.com","123456"),
-("shirish","shirish@gmail.com","123456"),
-("nabin ","nabin@gmail.com","123456");
 
+insert into
+    users (name, email, password)
+values (
+        "ram",
+        "ram@gmail.com",
+        "123456"
+    ),
+    (
+        "shirish",
+        "shirish@gmail.com",
+        "123456"
+    ),
+    (
+        "nabin ",
+        "nabin@gmail.com",
+        "123456"
+    );
 
-alter table users  add column img varchar(255) Null;
+alter table users add column img varchar(255) Null;
+
 use angan_sewa;
+
 CREATE TABLE province (
     province_id INT AUTO_INCREMENT PRIMARY KEY,
     province_name VARCHAR(100) not null
 );
+
 CREATE TABLE district (
     district_id INT AUTO_INCREMENT PRIMARY KEY,
     district_name VARCHAR(100) NOT NULL,
     province_id INT NOT NULL,
-    FOREIGN KEY (province_id) REFERENCES province(province_id)
-);      
+    FOREIGN KEY (province_id) REFERENCES province (province_id)
+);
+
+CREATE TABLE branch (
+    branch_id INT AUTO_INCREMENT PRIMARY KEY,
+    branch_name VARCHAR(100) NOT NULL UNIQUE,
+    district_id INT NOT NULL,
+    remarks VARCHAR(255) NULL,
+    FOREIGN KEY (district_id) REFERENCES district (district_id)
+)
