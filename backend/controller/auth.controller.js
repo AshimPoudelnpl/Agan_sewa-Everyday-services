@@ -5,7 +5,12 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 dotenv.config();
 
-export const loginUser = async (req, res) => {
+//login
+//Admin
+//addManager=auth table(branch_id)
+//addStaff(isLigin,is Admin)=staff table{branch_id}
+
+export const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
@@ -54,15 +59,25 @@ export const loginUser = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error during login:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    next(error);
   }
 };
-export const logoutUser = (req, res) => {
-  res.clearCookie("token", {
-    httpOnly: true,
-    secure: false, // set true in production (HTTPS)
-    sameSite: "strict",
-  });
-  res.status(200).json({ message: "Logout Successful" });
+export const logoutUser = async(req, res, next) => {
+  try {
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: false, // set true in production (HTTPS)
+      sameSite: "strict",
+    });
+    res.status(200).json({ message: "Logout Successful" });
+  } catch (error) {
+    next(error);
+  }
 };
+ export const addStaff=async(req,res,next)=>{
+  const {staff_name,staff_email,staff_phone,staff_address,staff_password}=req.body;
+  const[result]= await db.query("insert ")
+
+
+
+ }
