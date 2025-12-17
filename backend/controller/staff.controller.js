@@ -9,7 +9,7 @@ export const addStaff = async (req, res) => {
       return res.status(400).json({ message: "Required fields missing" });
     }
     const [existingUser] = await db.query(
-      "SELECT id FROM staff WHERE email = ?",
+      "SELECT staff_id FROM staff WHERE email = ?",
       [email]
     );
 

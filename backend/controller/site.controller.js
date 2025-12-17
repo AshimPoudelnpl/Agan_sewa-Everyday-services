@@ -72,6 +72,7 @@ export const getReview = async (req, res) => {
     console.log(error);
   }
 };
+//trustedcustomers
 export const addTrustedCustomers = async (req, res) => {
   try {
     const { name } = req.body;
@@ -101,6 +102,41 @@ export const getTrustedCustomers = async (req, res) => {
     res
       .status(201)
       .json({ message: "customer retrived sucessfully", data: row });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+//gallery
+export const addGallery = async (req, res) => {
+  try {
+    const { title, location, date, branch_id, staff_id } = req.body;
+    console.log(req.file);
+    if (!title || !location) {
+      if (req.file) {
+        removeImage(req.file.imagePath);
+      }
+      return res.status(400).json({ message: "tile and location required" });
+    }
+    const imagePath = req.file ? `uploads/gallery/${req.file.filename}` : null;
+
+    const [galleryExist] = await db.query(
+      "insert into gallery (title,location ,branch_id,date,staff_id ) values (?,?,?,?,?)",
+      [title, location, branch_id, date, staff_id]
+    );
+    res
+      .status(200)
+      .json({ message: "gallery Added Successfully", image: imagePath });
+  } catch (error) {
+    console.log(error);
+  }
+};
+export const getGallery = async (req, res) => {
+  try {
+    const [row] = await db.query("SELECT * FROM gallery");
+    res
+      .status(200)
+      .json({ message: "Gallery retrieved successfully", data: row });
   } catch (error) {
     console.log(error);
   }
