@@ -4,24 +4,31 @@ import bcrypt from "bcryptjs";
 //password addd
 export const addStaff = async (req, res, next) => {
   try {
-    console.log(req.file);
     const { branch_id, name, email, phone, address, password, role } = req.body;
 
     if (!branch_id || !name || !phone || !req.file) {
       return res.status(400).json({ message: "Required fields missing" });
     }
+
+    const [branchExists] = await db.query(
+      "SELECT branch_id FROM branch WHERE branch_id = ?",
+      [branch_id]
+    );
+    if (branchExists.length === 0) {
+      return res.status(404).json({ message: "Branch does not exist" });
+    }
+
     const [existingUser] = await db.query(
       "SELECT staff_id FROM staff WHERE email = ?",
       [email]
     );
-    const imagePath = `uploads/staff/${req.file.filename}`;
-
     if (existingUser.length > 0) {
       return res.status(409).json({
         message: "Email already exists",
       });
     }
 
+    const imagePath = `uploads/staff/${req.file.filename}`;
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const [result] = await db.query(

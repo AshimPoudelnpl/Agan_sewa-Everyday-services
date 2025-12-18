@@ -7,6 +7,15 @@ export const addInquiry = async (req, res, next) => {
     if (!name || !phone || !address || !branch_id) {
       return res.status(401).json({ message: "please fill all credentials" });
     }
+    
+    const [branchExists] = await db.query(
+      "SELECT branch_id FROM branch WHERE branch_id = ?",
+      [branch_id]
+    );
+    if (branchExists.length === 0) {
+      return res.status(404).json({ message: "Branch does not exist" });
+    }
+    
     await db.query(
       "insert into inquiry( name,phone,email,address ,description ,branch_id) values (?,?,?,?,?,?) ",
       [name, phone, email, address, description, branch_id]
@@ -60,6 +69,15 @@ export const addReview = async (req, res, next) => {
     if (!name || !star || !description || !branch_id) {
       return res.status(401).json({ message: "please fill all credentials" });
     }
+    
+    const [branchExists] = await db.query(
+      "SELECT branch_id FROM branch WHERE branch_id = ?",
+      [branch_id]
+    );
+    if (branchExists.length === 0) {
+      return res.status(404).json({ message: "Branch does not exist" });
+    }
+    
     await db.query(
       "insert into review( name,star ,description ,branch_id) values (?,?,?,?) ",
       [name, star, description, branch_id]
@@ -154,6 +172,28 @@ export const addGallery = async (req, res, next) => {
       return res.status(400).json({
         message: "title, location and image required",
       });
+    }
+
+    if (branch_id) {
+      const [branchExists] = await db.query(
+        "SELECT branch_id FROM branch WHERE branch_id = ?",
+        [branch_id]
+      );
+      if (branchExists.length === 0) {
+        removeImages(req.files);
+        return res.status(404).json({ message: "Branch does not exist" });
+      }
+    }
+
+    if (staff_id) {
+      const [staffExists] = await db.query(
+        "SELECT staff_id FROM staff WHERE staff_id = ?",
+        [staff_id]
+      );
+      if (staffExists.length === 0) {
+        removeImages(req.files);
+        return res.status(404).json({ message: "Staff does not exist" });
+      }
     }
 
     const imagePaths = req.files.map(

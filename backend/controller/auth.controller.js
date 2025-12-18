@@ -85,13 +85,21 @@ export const addmanagerByAdmin = async (req, res, next) => {
       role,
       branch_id,
     } = req.body;
-    console.log(req.body);
 
     if (!manager_name || !manager_email || !manager_phone || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    console.log(req.file);
+    if (branch_id) {
+      const [branchExists] = await db.query(
+        "SELECT branch_id FROM branch WHERE branch_id = ?",
+        [branch_id]
+      );
+      if (branchExists.length === 0) {
+        return res.status(404).json({ message: "Branch does not exist" });
+      }
+    }
+
     const [result] = await db.query(
       "SELECT * FROM users WHERE role = ? AND email = ?",
       ["manager", manager_email]
@@ -119,8 +127,6 @@ export const addmanagerByAdmin = async (req, res, next) => {
 
     res.status(201).json({
       message: "Manager added successfully",
-      user: manager_name,
-      password: hashedPassword,
     });
   } catch (error) {
     next(error);
@@ -220,7 +226,17 @@ export const addStaffByManager = async (req, res, next) => {
       role,
       branch_id,
     } = req.body;
-    console.log(req.file);
+
+    if (branch_id) {
+      const [branchExists] = await db.query(
+        "SELECT branch_id FROM branch WHERE branch_id = ?",
+        [branch_id]
+      );
+      if (branchExists.length === 0) {
+        return res.status(404).json({ message: "Branch does not exist" });
+      }
+    }
+
     const [existing] = await db.query(
       "SELECT * FROM staff WHERE name = ? AND email = ?",
       [staff_name, staff_email]
@@ -246,9 +262,8 @@ export const addStaffByManager = async (req, res, next) => {
     );
     res
       .status(201)
-      .json({ message: "Staff created successfully", data: result });
+      .json({ message: "Staff created successfully" });
   } catch (error) {
-    console.log(error);
     next(error);
   }
 };

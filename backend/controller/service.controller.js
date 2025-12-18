@@ -1,26 +1,30 @@
 import db from "../config/db.js";
 import { removeImage } from "./../utils/removeImg.js";
 export const addServices = async (req, res, next) => {
-  let imagePath = "";
   try {
     const { name, description, branch_id } = req.body;
-    console.log(req.body);
-    console.log(req.file);
+    
     if (!name || !description) {
       if (req.file) {
-        removeImage(req.file.imagePath);
+        removeImage(req.file.path);
       }
       return res.status(400).json({ message: "Name, Description required" });
     }
-    const imagePath = req.file ? `uploads/service/${req.file.filename}` : null;
-
-    const [existingBranchId] = await db.query(
-      "select branch_id from branch where branch_id=?",
-      [branch_id]
-    );
-    if (existingBranchId.length === 0) {
-      return res.status(404).json({ message: " Branch doesnot exists" });
+    
+    if (branch_id) {
+      const [existingBranchId] = await db.query(
+        "select branch_id from branch where branch_id=?",
+        [branch_id]
+      );
+      if (existingBranchId.length === 0) {
+        if (req.file) {
+          removeImage(req.file.path);
+        }
+        return res.status(404).json({ message: "Branch does not exist" });
+      }
     }
+    
+    const imagePath = req.file ? `uploads/service/${req.file.filename}` : null;
 
     const [services] = await db.query(
       "insert into service (service_name,description,service_image,branch_id ) values (?,?,?,?)",
@@ -28,8 +32,11 @@ export const addServices = async (req, res, next) => {
     );
     res
       .status(200)
-      .json({ message: "Service Added Successfully", image: imagePath });
+      .json({ message: "Service Added Successfully" });
   } catch (error) {
+    if (req.file) {
+      removeImage(req.file.path);
+    }
     next(error);
   }
 };
@@ -79,16 +86,37 @@ export const deleteService = async (req, res, next) => {
 export const updateService = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, description } = req.body;
+    const { name, description, branch_id } = req.body;
 
-    const [result] = await db.query(
-      "UPDATE services SET service_name = ?, description = ? WHERE service_id = ?",
-      [name, description, id]
+    const [existing] = await db.query(
+      "SELECT * FROM service WHERE service_id = ?",
+      [id]
     );
 
-    if (result.affectedRows === 0) {
+    if (existing.length === 0) {
       return res.status(404).json({ message: "Service not found" });
     }
+
+    const oldService = existing[0];
+    const updatedName = name || oldService.service_name;
+    const updatedDescription = description || oldService.description;
+    const updatedBranchId = branch_id || oldService.branch_id;
+
+    if (branch_id && branch_id !== oldService.branch_id) {
+      const [branchExists] = await db.query(
+        "SELECT branch_id FROM branch WHERE branch_id = ?",
+        [branch_id]
+      );
+      if (branchExists.length === 0) {
+        return res.status(404).json({ message: "Branch does not exist" });
+      }
+    }
+
+    const [result] = await db.query(
+      "UPDATE service SET service_name = ?, description = ?, branch_id = ? WHERE service_id = ?",
+      [updatedName, updatedDescription, updatedBranchId, id]
+    );
+
     res.status(200).json({ message: "Service updated successfully" });
   } catch (error) {
     next(error);
