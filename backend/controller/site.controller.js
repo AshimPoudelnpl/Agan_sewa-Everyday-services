@@ -1,4 +1,5 @@
 import db from "../config/db.js";
+import { removeImages } from "../utils/removeImg.js";
 
 export const addInquiry = async (req, res, next) => {
   try {
@@ -32,6 +33,22 @@ LEFT JOIN branch b
 `);
 
     res.status(201).json({ message: "Inquiry retrive Sucessfully", data: row });
+  } catch (error) {
+    next(error);
+  }
+};
+export const deleteInquiry = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const [result] = await db.query(
+      "DELETE FROM inquiry WHERE inquiry_id = ?",
+      [id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "inquiry  not found" });
+    }
+    res.status(200).json({ message: "Inquiry deleted successfully" });
   } catch (error) {
     next(error);
   }
@@ -72,6 +89,22 @@ export const getReview = async (req, res, next) => {
     next(error);
   }
 };
+export const deleteReview = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const [result] = await db.query("DELETE FROM review WHERE review_id = ?", [
+      id,
+    ]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: " Review is empty" });
+    }
+    res.status(200).json({ message: "Review deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 //trustedcustomers
 export const addTrustedCustomers = async (req, res, next) => {
   try {
@@ -117,33 +150,65 @@ export const addGallery = async (req, res, next) => {
     const { title, location, date, branch_id, staff_id } = req.body;
 
     if (!title || !location || !req.files || req.files.length === 0) {
-      if (req.file) {
-        removeImage(req.file.imagePath);
-      }
-      return res
-        .status(400)
-        .json({ message: "title, location and image required" });
+      removeImages(req.files);
+      return res.status(400).json({
+        message: "title, location and image required",
+      });
     }
 
-    const imagePath = `uploads/gallery/${req.files[0].filename}`;
+    const imagePaths = req.files.map(
+      (file) => `uploads/gallery/${file.filename}`
+    );
 
     await db.query(
-      "insert into gallery (title,location ,branch_id,date,staff_id,gallery_img ) values (?,?,?,?,?,?)",
-      [title, location, branch_id, date, staff_id, imagePath]
+      "INSERT INTO gallery (title,location,branch_id,date,staff_id,gallery_img) VALUES (?,?,?,?,?,?)",
+      [title, location, branch_id, date, staff_id , JSON.stringify(imagePaths)]
     );
+
+    res.status(200).json({
+      message: "gallery added successfully",
+      images: imagePaths,
+    });
+  } catch (error) {
+    removeImages(req.files);
+    next(error);
+  }
+};
+
+export const getGallery = async (req, res, next) => {
+  try {
+    const [row] = await db.query(`SELECT
+  g.gallery_id,
+  g.title,
+  g.location,
+  g.date,
+  g.gallery_img,
+  g.staff_id,
+  b.branch_id,
+  b.branch_name
+FROM gallery g
+LEFT JOIN branch b
+  ON g.branch_id = b.branch_id;
+`);
     res
       .status(200)
-      .json({ message: "gallery Added Successfully", image: imagePath });
+      .json({ message: "Gallery retrieved successfully", data: row });
   } catch (error) {
     next(error);
   }
 };
-export const getGallery = async (req, res, next) => {
+export const deleteGallery = async (req, res, next) => {
   try {
-    const [row] = await db.query("SELECT * FROM gallery");
-    res
-      .status(200)
-      .json({ message: "Gallery retrieved successfully", data: row });
+    const { id } = req.params;
+    const [result] = await db.query(
+      "DELETE FROM gallery WHERE gallery_id = ?",
+      [id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: " Gallery is empty" });
+    }
+    res.status(200).json({ message: "gallery deleted successfully" });
   } catch (error) {
     next(error);
   }

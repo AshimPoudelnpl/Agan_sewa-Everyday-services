@@ -1,4 +1,5 @@
 import db from "../config/db.js";
+import bcrypt from "bcryptjs";
 
 //password addd
 export const addStaff = async (req, res, next) => {
@@ -21,6 +22,8 @@ export const addStaff = async (req, res, next) => {
       });
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const [result] = await db.query(
       `INSERT INTO staff    
       (branch_id, name, email, phone, address, password, role,staff_image)
@@ -31,7 +34,7 @@ export const addStaff = async (req, res, next) => {
         email,
         phone,
         address,
-        password,
+        hashedPassword,
         role || "staff",
         imagePath,
       ]

@@ -1,5 +1,5 @@
 import fs from "fs";
-
+//removing single image
 export const removeImage = (path) => {
   try {
     if (fs.existsSync(path)) {
@@ -9,4 +9,15 @@ export const removeImage = (path) => {
     console.log(`file not found :${path }`);
   }
 };
-//remove image from uploads
+//remove multiple upload images
+export const removeImages = (files) => {
+  try {
+    files.forEach((file) => {
+      if (fs.existsSync(file.path)) {
+        fs.unlinkSync(file.path);
+      }
+    });
+  } catch (error) {
+    console.log("files not found");
+  }
+};
