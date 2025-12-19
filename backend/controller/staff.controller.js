@@ -82,7 +82,9 @@ export const deleteStaff = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const [result] = await db.query("DELETE FROM staff WHERE id = ?", [id]);
+    const [result] = await db.query("DELETE FROM staff WHERE staff_id = ?", [
+      id,
+    ]);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: "User not found" });
@@ -98,22 +100,42 @@ export const editStaff = async (req, res, next) => {
     const { id } = req.params;
     const { name, email, address, role } = req.body;
 
+    const [existing] = await db.query(
+      "SELECT * FROM staff WHERE staff_id = ?",
+      [id]
+    );
+
+    if (existing.length === 0) {
+      return res.status(404).json({ message: "Staff not found" });
+    }
+
+    const oldStaff = existing[0];
+    const updatedName = name || oldStaff.name;
+    const updatedEmail = email || oldStaff.email;
+    const updatedAddress = address || oldStaff.address;
+    const updatedRole = role || oldStaff.role;
+
+    if (email && email !== oldStaff.email) {
+      const [emailCheck] = await db.query(
+        "SELECT staff_id FROM staff WHERE email = ? AND staff_id != ?",
+        [email, id]
+      );
+      if (emailCheck.length > 0) {
+        return res.status(409).json({ message: "Email already exists" });
+      }
+    }
+
     const [result] = await db.query(
       `UPDATE staff SET 
         name = ?,
         email = ?,
-    
         address = ?,
         role = ?
-       WHERE id = ?`,
-      [name, email, address, role, id]
+       WHERE staff_id = ?`,
+      [updatedName, updatedEmail, updatedAddress, updatedRole, id]
     );
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.status(200).json({ message: "User updated successfully" });
+    res.status(200).json({ message: "Staff updated successfully" });
   } catch (error) {
     next(error);
   }
