@@ -27,7 +27,7 @@ export const addServices = async (req, res, next) => {
     const imagePath = req.file ? `uploads/service/${req.file.filename}` : null;
 
     const [services] = await db.query(
-      "insert into service (service_name,description,service_image,branch_id ) values (?,?,?,?)",
+      "insert into services (service_name,description,service_image,branch_id ) values (?,?,?,?)",
       [name, description, imagePath, branch_id]
     );
     res

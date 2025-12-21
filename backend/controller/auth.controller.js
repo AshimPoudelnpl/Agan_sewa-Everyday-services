@@ -38,7 +38,7 @@ export const loginUser = async (req, res, next) => {
 
     // 3. Create JWT token
     const token = jwt.sign(
-      { id: user.id, email: user.email },
+      { id: user.id, email: user.email, role: user.role },
       process.env.SECRET_KEY,
       { expiresIn: process.env.TOKEN_EXPIRY }
     );
@@ -56,6 +56,7 @@ export const loginUser = async (req, res, next) => {
         id: user.id,
         email: user.email,
         token: token,
+        role: user.role,
       },
     });
   } catch (error) {
@@ -85,6 +86,7 @@ export const addmanagerByAdmin = async (req, res, next) => {
       role,
       branch_id,
     } = req.body;
+    console.log(req.user);
 
     if (!manager_name || !manager_email || !manager_phone || !password) {
       return res.status(400).json({ message: "All fields are required" });
@@ -119,7 +121,7 @@ export const addmanagerByAdmin = async (req, res, next) => {
         manager_email,
         manager_phone,
         hashedPassword,
-        role || "manager",
+        role,
         branch_id,
         imagePath,
       ]
@@ -134,7 +136,22 @@ export const addmanagerByAdmin = async (req, res, next) => {
 };
 export const getmanagerByAdmin = async (req, res, next) => {
   try {
-    const [row] = await db.query("select * from users ");
+    const [row] = await db.query(`SELECT 
+    m.manager_name,
+    m.manager_email,
+    m.manager_phone,
+    m.hashedPassword,
+    m.role,
+    m.branch_id,
+    b.branch_name,
+    b.branch_address
+FROM managers m
+LEFT JOIN branches b
+    ON m.branch_id = b.branch_id;
+
+
+      `);
+
     res
       .status(201)
       .json({ message: "manager retrived sucessfully", data: row });
@@ -211,58 +228,6 @@ export const editmanaagerByAdmin = async (req, res, next) => {
     return res.status(200).json({
       message: "Manager updated successfully",
     });
-  } catch (error) {
-    next(error);
-  }
-};
-export const addStaffByManager = async (req, res, next) => {
-  try {
-    const {
-      staff_name,
-      staff_email,
-      staff_phone,
-      staff_address,
-      staff_password,
-      role,
-      branch_id,
-    } = req.body;
-
-    if (branch_id) {
-      const [branchExists] = await db.query(
-        "SELECT branch_id FROM branch WHERE branch_id = ?",
-        [branch_id]
-      );
-      if (branchExists.length === 0) {
-        return res.status(404).json({ message: "Branch does not exist" });
-      }
-    }
-
-    const [existing] = await db.query(
-      "SELECT * FROM staff WHERE name = ? AND email = ?",
-      [staff_name, staff_email]
-    );
-    if (existing.length > 0) {
-      return res.status(401).json({ message: "staff already exists" });
-    }
-    const imagePath = req.file ? `uploads/staff/${req.file.filename}` : null;
-
-    const hashedPassword = await bcrypt.hash(staff_password, 10);
-    const [result] = await db.query(
-      "insert into staff(name,email,phone,address,password,role,branch_id,staff_image) values(?,?,?,?,?,?,?,?) ",
-      [
-        staff_name,
-        staff_email,
-        staff_phone,
-        staff_address,
-        hashedPassword,
-        role || "staff",
-        branch_id,
-        imagePath,
-      ]
-    );
-    res
-      .status(201)
-      .json({ message: "Staff created successfully" });
   } catch (error) {
     next(error);
   }

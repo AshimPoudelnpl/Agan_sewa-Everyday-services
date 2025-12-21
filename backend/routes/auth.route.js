@@ -1,7 +1,6 @@
 import express from "express";
 import {
   addmanagerByAdmin,
-  addStaffByManager,
   deletemangerByAdmin,
   editmanaagerByAdmin,
   getmanagerByAdmin,
@@ -16,7 +15,6 @@ const authRouter = express.Router();
 
 authRouter.post("/login", loginUser);
 authRouter.post("/logout", islogin, logoutUser);
-authRouter.post("/add-staff", islogin, uploadstaff.single("image"), addStaffByManager);
 authRouter.post(
   "/add-manager",
   islogin,

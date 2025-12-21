@@ -5,6 +5,8 @@ import bcrypt from "bcryptjs";
 export const addStaff = async (req, res, next) => {
   try {
     const { branch_id, name, email, phone, address, password, role } = req.body;
+    console.log(req.body);
+    console.log(req.file);
 
     if (!branch_id || !name || !phone || !req.file) {
       return res.status(400).json({ message: "Required fields missing" });
@@ -35,16 +37,7 @@ export const addStaff = async (req, res, next) => {
       `INSERT INTO staff    
       (branch_id, name, email, phone, address, password, role,staff_image)
       VALUES (?, ?, ?, ?, ?, ?, ?,?)`,
-      [
-        branch_id,
-        name,
-        email,
-        phone,
-        address,
-        hashedPassword,
-        role || "staff",
-        imagePath,
-      ]
+      [branch_id, name, email, phone, address, hashedPassword, role, imagePath]
     );
 
     res.status(201).json({
