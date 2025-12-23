@@ -19,9 +19,21 @@ export const loginUser = async (req, res, next) => {
     }
 
     // 1. Find user by email only
-    const [result] = await db.query("SELECT * FROM users WHERE email = ?", [
-      email,
-    ]);
+    const [result] = await db.query(
+      `SELECT 
+    u.id,
+    u.name,
+    u.email,
+    u.phone,
+    u.password,
+    u.role,
+    b.branch_id,
+    b.branch_name
+FROM users u
+LEFT JOIN branch b
+    ON u.branch_id = b.branch_id where u.email=?`,
+      [email]
+    );
 
     if (result.length === 0) {
       return res.status(401).json({ message: "Invalid Credentials" });
@@ -48,16 +60,11 @@ export const loginUser = async (req, res, next) => {
       httpOnly: true,
       secure: false, // set true in production (HTTPS)
       sameSite: "strict",
-    });
+    });0
 
     res.status(200).json({
       message: "Login Successful",
-      user: {
-        id: user.id,
-        email: user.email,
-        token: token,
-        role: user.role,
-      },
+      user,
     });
   } catch (error) {
     next(error);
@@ -146,7 +153,7 @@ export const getmanagerByAdmin = async (req, res, next) => {
     b.branch_name,
     b.branch_address
 FROM managers m
-LEFT JOIN branches b
+LEFT JOIN branch  b
     ON m.branch_id = b.branch_id;
 
 

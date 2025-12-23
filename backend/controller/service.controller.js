@@ -3,14 +3,14 @@ import { removeImage } from "./../utils/removeImg.js";
 export const addServices = async (req, res, next) => {
   try {
     const { name, description, branch_id } = req.body;
-    
+
     if (!name || !description) {
       if (req.file) {
         removeImage(req.file.path);
       }
       return res.status(400).json({ message: "Name, Description required" });
     }
-    
+
     if (branch_id) {
       const [existingBranchId] = await db.query(
         "select branch_id from branch where branch_id=?",
@@ -23,16 +23,14 @@ export const addServices = async (req, res, next) => {
         return res.status(404).json({ message: "Branch does not exist" });
       }
     }
-    
+
     const imagePath = req.file ? `uploads/service/${req.file.filename}` : null;
 
     const [services] = await db.query(
-      "insert into services (service_name,description,service_image,branch_id ) values (?,?,?,?)",
-      [name, description, imagePath, branch_id]
+      "insert into services (service_name,description,service_image,branch_id,status) values (?,?,?,?,?)",
+      [name, description, imagePath, branch_id, "pending"]
     );
-    res
-      .status(200)
-      .json({ message: "Service Added Successfully" });
+    res.status(200).json({ message: "Service Added Successfully" });
   } catch (error) {
     if (req.file) {
       removeImage(req.file.path);
@@ -43,11 +41,13 @@ export const addServices = async (req, res, next) => {
 //get Services
 export const getServices = async (req, res, next) => {
   try {
+    console.log(req.user);
     const [row] = await db.query(`SELECT 
   s.service_id,
   s.service_name,
   s.description,
   s.service_image,
+  s.status,
   b.branch_name
   from services s
   left join branch b

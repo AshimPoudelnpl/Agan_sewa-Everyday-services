@@ -7,11 +7,9 @@ import {
 } from "../controller/staff.controller.js";
 import { uploadstaff } from "../utils/multerHandler.js";
 import islogin from "./../middleware/Islogin.js";
-import { isAdmin } from "../middleware/IsAdmin.js";
-
+import { authorizeRoles } from "../middleware/Role.js";
 export const staffRouter = express.Router();
-
-staffRouter.post("/add-staff", islogin, uploadstaff.single("image"), addStaff); 
-staffRouter.get("/get-staff", islogin, getStaff);
-staffRouter.delete("/delete-staff/:id", islogin, isAdmin, deleteStaff); 
-staffRouter.patch("/edit-staff/:id", islogin, editStaff);
+staffRouter.post("/add-staff", islogin, authorizeRoles("admin"), uploadstaff.single("image"), addStaff);
+staffRouter.get("/get-staff", islogin, authorizeRoles("admin"), getStaff);
+staffRouter.delete("/delete-staff/:id", islogin, authorizeRoles("admin"), deleteStaff);
+staffRouter.patch("/edit-staff/:id", islogin, authorizeRoles("admin"), editStaff);
