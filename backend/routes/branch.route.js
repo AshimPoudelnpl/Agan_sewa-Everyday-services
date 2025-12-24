@@ -11,8 +11,8 @@ import {
   getProvince,
   updateBranch,
 } from "../controller/branch.controller.js";
-import islogin from "../middleware/Islogin.js";
-import { authorizeRoles } from "../middleware/AuthorizeRoles.js";
+import islogin from "../middleware/auth/Islogin.js";
+import { authorizeRoles } from "../middleware/auth/AuthorizeRoles.js";
 export const branchRouter = express.Router();
 branchRouter.post(
   "/add-province",
@@ -43,7 +43,7 @@ branchRouter.delete(
 );
 
 branchRouter.post("/add-branch", islogin, authorizeRoles("admin"), addBranch);
-branchRouter.get("/get-branch", getBranch);
+branchRouter.get("/get-branch", islogin, authorizeRoles("admin","manager"), getBranch);
 branchRouter.delete(
   "/delete-branch/:id",
   islogin,

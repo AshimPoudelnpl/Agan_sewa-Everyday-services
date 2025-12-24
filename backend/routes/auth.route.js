@@ -7,9 +7,9 @@ import {
   loginUser,
   logoutUser,
 } from "../controller/auth.controller.js";
-import islogin from "../middleware/Islogin.js";
+import islogin from "../middleware/auth/Islogin.js";
 import { uploadmanager, uploadstaff } from "../utils/multerHandler.js";
-import { authorizeRoles } from "../middleware/AuthorizeRoles.js";
+import { authorizeRoles } from "../middleware/auth/AuthorizeRoles.js";
 
 const authRouter = express.Router();
 

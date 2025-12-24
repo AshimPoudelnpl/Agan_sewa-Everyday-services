@@ -6,15 +6,16 @@ import {
   addTrustedCustomers,
   deleteGallery,
   deleteReview,
+  getAllGallery,
   getGallery,
   getInquiry,
   getReview,
   getTrustedCustomers,
 } from "../controller/site.controller.js";
 import { uploadCustomer, uploadGallery } from "../utils/multerHandler.js";
-import islogin from "./../middleware/Islogin.js";
-import { authorizeRoles } from "../middleware/AuthorizeRoles.js";
-import { authorizeBranchAccess } from "../middleware/BranchAccess.js";
+import islogin from "./../middleware/auth/Islogin.js";
+import { authorizeRoles } from "../middleware/auth/AuthorizeRoles.js";
+import { authorizeBranchAccess } from "../middleware/auth/BranchAccess.js";
 
 export const siteRouter = express.Router();
 siteRouter.post("/add-inquiry", addInquiry);
@@ -39,4 +40,5 @@ siteRouter.post(
   addGallery
 );
 siteRouter.get("/get-gallery", getGallery);
+siteRouter.get("/get-galleries", getAllGallery);
 siteRouter.delete("/delete-gallery/:id", islogin, authorizeRoles("admin", "manager"), authorizeBranchAccess, deleteGallery);

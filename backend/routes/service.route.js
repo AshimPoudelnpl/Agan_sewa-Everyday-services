@@ -2,13 +2,14 @@ import express from "express";
 import {
   addServices,
   deleteService,
+  getAllServices,
   getServices,
   updateService,
 } from "../controller/service.controller.js";
 import { uploadService } from "../utils/multerHandler.js";
-import islogin from "../middleware/Islogin.js";
-import { authorizeRoles } from "../middleware/AuthorizeRoles.js";
-import { authorizeBranchAccess } from "../middleware/BranchAccess.js";
+import islogin from "../middleware/auth/Islogin.js";
+import { authorizeRoles } from "../middleware/auth/AuthorizeRoles.js";
+import { authorizeBranchAccess } from "../middleware/auth/BranchAccess.js";
 
 export const serviceRouter = express.Router();
 
@@ -21,7 +22,8 @@ serviceRouter.post(
   addServices
 );
 
-serviceRouter.get("/get-service", getServices);
+serviceRouter.get("/get-service",islogin,authorizeRoles("admin","manager"),authorizeBranchAccess, getServices);
+serviceRouter.get("/get-services",islogin, getAllServices);
 
 serviceRouter.delete(
   "/delete-service/:branch_id/:id",

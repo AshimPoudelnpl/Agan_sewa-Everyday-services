@@ -50,8 +50,9 @@ export const addStaff = async (req, res, next) => {
 };
 
 export const getStaff = async (req, res, next) => {
+  const { role, branch_id } = req.user;
   try {
-    const [users] = await db.query(`
+    let query = `
       SELECT 
        s.staff_id,
         s.name,
@@ -63,8 +64,15 @@ export const getStaff = async (req, res, next) => {
         sv.branch_name
       FROM staff s
       LEFT JOIN branch sv
-       ON s.branch_id = sv.branch_id
-    `);
+       ON s.branch_id = sv.branch_id`;
+
+    const queryParams = [];
+    if (role === "manager") {
+      query += ` WHERE s.branch_id = ?`;
+      queryParams.push(branch_id);
+    }
+
+    const [users] = await db.execute(query, queryParams);
 
     res.status(200).json(users);
   } catch (error) {

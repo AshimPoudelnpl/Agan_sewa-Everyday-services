@@ -7,7 +7,7 @@ export const addInquiry = async (req, res, next) => {
     if (!name || !phone || !address || !branch_id) {
       return res.status(401).json({ message: "please fill all credentials" });
     }
-    
+
     const [branchExists] = await db.query(
       "SELECT branch_id FROM branch WHERE branch_id = ?",
       [branch_id]
@@ -15,7 +15,7 @@ export const addInquiry = async (req, res, next) => {
     if (branchExists.length === 0) {
       return res.status(404).json({ message: "Branch does not exist" });
     }
-    
+
     await db.query(
       "insert into inquiry( name,phone,email,address ,description ,branch_id) values (?,?,?,?,?,?) ",
       [name, phone, email, address, description, branch_id]
@@ -26,8 +26,9 @@ export const addInquiry = async (req, res, next) => {
   }
 };
 export const getInquiry = async (req, res, next) => {
+  const { role, branch_id } = req.user;
   try {
-    const [row] = await db.query(`SELECT 
+    let query = `SELECT 
   i.inquiry_id,
   i.name,
   i.phone,
@@ -38,8 +39,15 @@ export const getInquiry = async (req, res, next) => {
   b.branch_name
 FROM inquiry i
 LEFT JOIN branch b
-  ON i.branch_id = b.branch_id
-`);
+  ON i.branch_id = b.branch_id`;
+
+    const queryParams = [];
+    if (role === "manager") {
+      query += ` WHERE i.branch_id = ?`;
+      queryParams.push(branch_id);
+    }
+
+    const [row] = await db.execute(query, queryParams);
 
     res.status(201).json({ message: "Inquiry retrive Sucessfully", data: row });
   } catch (error) {
@@ -69,7 +77,7 @@ export const addReview = async (req, res, next) => {
     if (!name || !star || !description || !branch_id) {
       return res.status(401).json({ message: "please fill all credentials" });
     }
-    
+
     const [branchExists] = await db.query(
       "SELECT branch_id FROM branch WHERE branch_id = ?",
       [branch_id]
@@ -77,7 +85,7 @@ export const addReview = async (req, res, next) => {
     if (branchExists.length === 0) {
       return res.status(404).json({ message: "Branch does not exist" });
     }
-    
+
     await db.query(
       "insert into review( name,star ,description ,branch_id) values (?,?,?,?) ",
       [name, star, description, branch_id]
@@ -88,8 +96,9 @@ export const addReview = async (req, res, next) => {
   }
 };
 export const getReview = async (req, res, next) => {
+  const { role, branch_id } = req.user;
   try {
-    const [row] = await db.query(`select
+    let query = `select
       r.name,
       r.star,
       r.description,
@@ -97,9 +106,15 @@ export const getReview = async (req, res, next) => {
       b.branch_name
       from review r
       left join branch b
-      on r.branch_id=b.branch_id
-      
-      `);
+      on r.branch_id=b.branch_id`;
+
+    const queryParams = [];
+    if (role === "manager") {
+      query += ` WHERE r.branch_id = ?`;
+      queryParams.push(branch_id);
+    }
+
+    const [row] = await db.execute(query, queryParams);
     res
       .status(201)
       .json({ message: "Review retrived successfully", data: row });
@@ -202,7 +217,7 @@ export const addGallery = async (req, res, next) => {
 
     await db.query(
       "INSERT INTO gallery (title,location,branch_id,date,staff_id,gallery_img) VALUES (?,?,?,?,?,?)",
-      [title, location, branch_id, date, staff_id , JSON.stringify(imagePaths)]
+      [title, location, branch_id, date, staff_id, JSON.stringify(imagePaths)]
     );
 
     res.status(200).json({
@@ -216,8 +231,9 @@ export const addGallery = async (req, res, next) => {
 };
 
 export const getGallery = async (req, res, next) => {
+  const { role, branch_id } = req.user;
   try {
-    const [row] = await db.query(`SELECT
+    let query = `SELECT
   g.gallery_id,
   g.title,
   g.location,
@@ -228,8 +244,15 @@ export const getGallery = async (req, res, next) => {
   b.branch_name
 FROM gallery g
 LEFT JOIN branch b
-  ON g.branch_id = b.branch_id;
-`);
+  ON g.branch_id = b.branch_id`;
+
+    const queryParams = [];
+    if (role === "manager") {
+      query += ` WHERE g.branch_id = ?`;
+      queryParams.push(branch_id);
+    }
+
+    const [row] = await db.execute(query, queryParams);
     res
       .status(200)
       .json({ message: "Gallery retrieved successfully", data: row });
@@ -237,6 +260,41 @@ LEFT JOIN branch b
     next(error);
   }
 };
+export const getAllGallery = async (req, res) => {
+  try {
+    const { province_id, district_id, branch_id } = req.query;
+    let query = "";
+    let params = [];
+
+    if (province_id && !district_id && !branch_id) {
+      // Province selected → show districts
+      query = "SELECT * FROM district WHERE province_id = ?";
+      params = [province_id];
+    } else if (province_id && district_id && !branch_id) {
+      // District selected → show branches
+      query = "SELECT * FROM branch WHERE district_id = ?";
+      params = [province_id,district_id];
+    } else if (province_id && district_id && branch_id) {
+      // Branch selected → show gallery
+      query = "SELECT * FROM gallery WHERE branch_id = ?";
+      params = [province_id,district_id,branch_id];
+    } else {
+      // Default → all gallery
+      query = "SELECT * FROM gallery";
+    }
+
+    const [results] = await db.query(query, params);
+
+    res.status(200).json({
+      message: "Gallery data fetched successfully",
+      data: results,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 export const deleteGallery = async (req, res, next) => {
   try {
     const { id } = req.params;

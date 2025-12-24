@@ -2,12 +2,10 @@ import db from "../config/db.js";
 import { removeImage } from "./../utils/removeImg.js";
 export const addServices = async (req, res, next) => {
   try {
-    console.log(req.user);
-    console.log(req.user.branch_id);
     if (req.user.role === "manager") {
       req.body.branch_id = req.user.branch_id;
     }
-    const { name, description,branch_id } = req.body;
+    const { name, description, branch_id } = req.body;
     console.log(req.body);
 
     if (!name || !description) {
@@ -46,30 +44,63 @@ export const addServices = async (req, res, next) => {
 };
 //get Services
 export const getServices = async (req, res, next) => {
+  console.log(req.user);
+  const { role, branch_id } = req.user;
   try {
-    const [row] = await db.query(`SELECT 
-  s.service_id,
-  s.service_name,
-  s.description,
-  s.service_image,
-  s.status,
-  b.branch_name
-  from services s
-  left join branch b
-  ON s.branch_id=b.branch_id`);
-    res.status(200).json({
-      message: "Service retrived Successfully",
-      result: row,
-    });
-  } catch (error) {
-    if (req.file) {
-      removeImage(req.file.imagePath);
+    let query = `SELECT 
+        s.service_id,
+        s.service_name,
+        s.description,
+        s.service_image,
+        s.status,
+        s.branch_id,
+        b.branch_name
+      FROM services s
+      LEFT JOIN branch b ON s.branch_id = b.branch_id`;
+
+    const queryParams = [];
+    if (role === "manager") {
+      query += ` where s.branch_id =?`;
+      queryParams.push(branch_id);
     }
 
+    const [result] = await db.execute(query, queryParams);
+
+    return res.status(200).json({
+      message: "all services are retrieved",
+      data: result,
+    });
+  } catch (error) {
     next(error);
   }
 };
-
+//public Services
+export const getAllServices = async (req, res) => {
+  try {
+    const { branch_id, district_id, province_id } = req.query;
+    console.log(req.query);
+    let query = "";
+    let params = [];
+    if (province_id && !district_id && !branch_id) {
+      query = "select * from district where province_id=?";
+      params = [province_id];
+    } else if (province_id && district_id && !branch_id) {
+      query = "select * from branch where district_id=?";
+      params = [province_id,district_id];
+    } else if (province_id && district_id && branch_id) {
+      query = "select * from services where branch_id=?";
+      params = [province_id,district_id,branch_id];
+    } else {
+      query = "select * from services";
+    }
+    const [results] = await db.query(query, params);
+    res
+      .status(200)
+      .json({ message: "Data Fetched sucessfully", data: results });
+  } catch (error) {
+    console.log(error);
+  }
+};
 //delete service controller
 export const deleteService = async (req, res, next) => {
   try {

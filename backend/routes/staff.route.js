@@ -6,9 +6,9 @@ import {
   getStaff,
 } from "../controller/staff.controller.js";
 import { uploadstaff } from "../utils/multerHandler.js";
-import islogin from "./../middleware/Islogin.js";
-import { authorizeRoles } from "../middleware/AuthorizeRoles.js";
-import { authorizeBranchAccess } from "../middleware/BranchAccess.js";
+import islogin from "./../middleware/auth/Islogin.js";
+import { authorizeRoles } from "../middleware/auth/AuthorizeRoles.js";
+import { authorizeBranchAccess } from "../middleware/auth/BranchAccess.js";
 export const staffRouter = express.Router();
 staffRouter.post(
   "/add-staff",

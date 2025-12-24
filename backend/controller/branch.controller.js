@@ -187,17 +187,25 @@ export const addBranch = async (req, res,next) => {
   }
 };
 export const getBranch = async (req, res,next) => {
+  const { role, branch_id } = req.user;
   try {
-    const [result] = await db.query(`SELECT 
+    let query = `SELECT 
   b.branch_id,
   b.branch_name,
   b.remarks,
+  b.district_id,
   d.district_name
   from branch b
   left join district d
-  on b.district_id=d.district_id
+  on b.district_id=d.district_id`;
 
-`);
+    const queryParams = [];
+    if (role === "manager") {
+      query += ` WHERE b.branch_id = ?`;
+      queryParams.push(branch_id);
+    }
+
+    const [result] = await db.execute(query, queryParams);
     res.status(200).json({ message: "Branches Retrived Sucessfully", result });
   } catch (error) {
     next(error);
