@@ -1,0 +1,15 @@
+Status codes (shortcut):
+
+200 → Success
+
+201 → Created
+
+400 → Bad request (client error)
+
+401 → Unauthorized (not logged in)
+
+403 → Forbidden (no permission)
+
+404 → Not found
+
+500 → Server error

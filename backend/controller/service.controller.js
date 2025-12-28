@@ -75,30 +75,39 @@ export const getServices = async (req, res, next) => {
   }
 };
 //public Services
-export const getAllServices = async (req, res) => {
+export const getAllServices = async (req, res, next) => {
   try {
     const { branch_id, district_id, province_id } = req.query;
-    console.log(req.query);
-    let query = "";
+    let query = `SELECT s.*, b.branch_name, d.district_name, p.province_name 
+                 FROM services s 
+                 LEFT JOIN branch b ON s.branch_id = b.branch_id 
+                 LEFT JOIN district d ON b.district_id = d.district_id 
+                 LEFT JOIN province p ON d.province_id = p.province_id`;
     let params = [];
-    if (province_id && !district_id && !branch_id) {
-      query = "select * from district where province_id=?";
-      params = [province_id];
-    } else if (province_id && district_id && !branch_id) {
-      query = "select * from branch where district_id=?";
-      params = [province_id,district_id];
-    } else if (province_id && district_id && branch_id) {
-      query = "select * from services where branch_id=?";
-      params = [province_id,district_id,branch_id];
-    } else {
-      query = "select * from services";
+    let conditions = [];
+    
+    if (branch_id) {
+      conditions.push("s.branch_id = ?");
+      params.push(branch_id);
+    } else if (district_id) {
+      conditions.push("b.district_id = ?");
+      params.push(district_id);
+    } else if (province_id) {
+      conditions.push("d.province_id = ?");
+      params.push(province_id);
     }
+    
+    if (conditions.length > 0) {
+      query += ` WHERE ${conditions.join(" AND ")}`;
+    }
+    
     const [results] = await db.query(query, params);
-    res
-      .status(200)
-      .json({ message: "Data Fetched sucessfully", data: results });
+    res.status(200).json({ 
+      message: "Services fetched successfully", 
+      data: results 
+    });
   } catch (error) {
-    console.log(error);
+    next(error);
   }
 };
 //delete service controller

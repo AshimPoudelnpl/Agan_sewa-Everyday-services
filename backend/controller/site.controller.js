@@ -260,38 +260,47 @@ LEFT JOIN branch b
     next(error);
   }
 };
-export const getAllGallery = async (req, res) => {
+export const getAllGallery = async (req, res, next) => {
   try {
     const { province_id, district_id, branch_id } = req.query;
-    let query = "";
-    let params = [];
-
-    if (province_id && !district_id && !branch_id) {
-      // Province selected → show districts
-      query = "SELECT * FROM district WHERE province_id = ?";
-      params = [province_id];
-    } else if (province_id && district_id && !branch_id) {
-      // District selected → show branches
-      query = "SELECT * FROM branch WHERE district_id = ?";
-      params = [province_id,district_id];
-    } else if (province_id && district_id && branch_id) {
-      // Branch selected → show gallery
-      query = "SELECT * FROM gallery WHERE branch_id = ?";
-      params = [province_id,district_id,branch_id];
-    } else {
-      // Default → all gallery
-      query = "SELECT * FROM gallery";
+    
+    let query = `SELECT
+      g.gallery_id,
+      g.title,
+      g.location,
+      g.date,
+      g.gallery_img,
+      g.staff_id,
+      b.branch_id,
+      b.branch_name,
+      d.district_name,
+      p.province_name
+    FROM gallery g
+    LEFT JOIN branch b ON g.branch_id = b.branch_id
+    LEFT JOIN district d ON b.district_id = d.district_id
+    LEFT JOIN province p ON d.province_id = p.province_id`;
+    
+    const params = [];
+    
+    if (branch_id) {
+      query += ` WHERE g.branch_id = ?`;
+      params.push(branch_id);
+    } else if (district_id) {
+      query += ` WHERE b.district_id = ?`;
+      params.push(district_id);
+    } else if (province_id) {
+      query += ` WHERE d.province_id = ?`;
+      params.push(province_id);
     }
-
-    const [results] = await db.query(query, params);
-
+    
+    const [results] = await db.execute(query, params);
+    
     res.status(200).json({
-      message: "Gallery data fetched successfully",
+      message: "Gallery retrieved successfully",
       data: results,
     });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Server error" });
+    next(error);
   }
 };
 

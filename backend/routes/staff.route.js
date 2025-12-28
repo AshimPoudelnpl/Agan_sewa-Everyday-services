@@ -13,7 +13,7 @@ export const staffRouter = express.Router();
 staffRouter.post(
   "/add-staff",
   islogin,
-  authorizeRoles("admin", "manager"),
+  authorizeRoles("manager"),
   uploadstaff.single("image"),
   authorizeBranchAccess,
   addStaff

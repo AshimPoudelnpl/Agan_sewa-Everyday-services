@@ -10,7 +10,7 @@ dotenv.config();
 //addManager=auth table(branch_id)
 //addStaff(isLigin,is Admin)=staff table{branch_id}
 
-export const loginUser = async (req, res, next) => {
+export const  loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
