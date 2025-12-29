@@ -1,12 +1,9 @@
-import { useDispatch } from "react-redux";
-import Input from "./shared/Input";
+import Input from "../shared/Input";
 import { useState } from "react";
-import { setUser } from "../redux/features/authState";
-import { useLoginMutation } from "../redux/features/authSlice";
+import { useLogin } from "../hooks/useLogin";
 
 const Login = () => {
-  const dispatch = useDispatch();
-  const [login, { isLoading, error }] = useLoginMutation();
+  const { handleLogin, isLoading, error } = useLogin();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -14,7 +11,6 @@ const Login = () => {
   });
 
   const handleChange = (e) => {
-    //console.log('Input changed:', e.target.id, e.target.value);
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
@@ -26,13 +22,8 @@ const Login = () => {
       return;
     }
 
-    try {
-      const result = await login(formData).unwrap();
-      dispatch(setUser(result));
-      console.log("message",result?.message)
-    } catch (err) {
-      console.log('Login error:', err.data?.message);
-    }
+    const result = await handleLogin(formData);
+    console.log("message", result.data?.message);
   };
 
   return (
@@ -65,7 +56,11 @@ const Login = () => {
           >
             {isLoading ? "Logging in..." : "Login"}
           </button>
-          {error && <p className="text-red-500">{error.data?.message || 'Login failed'}</p>}
+          {error && (
+            <p className="text-red-500">
+              {error.data?.message || "Login failed"}
+            </p>
+          )}
         </form>
       </div>
     </div>
