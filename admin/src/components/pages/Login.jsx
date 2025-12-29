@@ -1,9 +1,14 @@
 import Input from "../shared/Input";
 import { useState } from "react";
-import { useLogin } from "../hooks/useLogin";
+import { useDispatch } from "react-redux";
+import { setUser } from "../../redux/features/authState";
+import { useLoginMutation } from "../../redux/features/authSlice";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
-  const { handleLogin, isLoading, error } = useLogin();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [login, { isLoading, error }] = useLoginMutation();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -22,8 +27,13 @@ const Login = () => {
       return;
     }
 
-    const result = await handleLogin(formData);
-    console.log("message", result.data?.message);
+    try {
+      const result = await login(formData).unwrap();
+      dispatch(setUser(result.user));
+      navigate("/dashboard");
+    } catch (err) {
+      console.log("Login error:", err.data?.message);
+    }
   };
 
   return (

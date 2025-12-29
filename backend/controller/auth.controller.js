@@ -109,6 +109,15 @@ export const addmanagerByAdmin = async (req, res, next) => {
       }
     }
 
+    // Check if a manager already exists for this branch
+    const [existingManager] = await db.query(
+      "SELECT * FROM users WHERE role = ? AND branch_id = ?",
+      ["manager", branch_id]
+    );
+    if (existingManager.length > 0) {
+      return res.status(409).json({ message: "Manager already exists for this branch" });
+    }
+
     const [result] = await db.query(
       "SELECT * FROM users WHERE role = ? AND email = ?",
       ["manager", manager_email]
@@ -144,24 +153,22 @@ export const addmanagerByAdmin = async (req, res, next) => {
 export const getmanagerByAdmin = async (req, res, next) => {
   try {
     const [row] = await db.query(`SELECT 
-    m.manager_name,
-    m.manager_email,
-    m.manager_phone,
-    m.hashedPassword,
-    m.role,
-    m.branch_id,
-    b.branch_name,
-    b.branch_address
-FROM managers m
-LEFT JOIN branch  b
-    ON m.branch_id = b.branch_id;
-
-
+    u.id,
+    u.name as manager_name,
+    u.email as manager_email,
+    u.phone as manager_phone,
+    u.role,
+    u.branch_id,
+    b.branch_name
+FROM users u
+LEFT JOIN branch b
+    ON u.branch_id = b.branch_id
+WHERE u.role = 'manager';
       `);
 
     res
-      .status(201)
-      .json({ message: "manager retrived sucessfully", data: row });
+      .status(200)
+      .json({ message: "managers retrieved successfully", data: row });
   } catch (error) {
     next(error);
   }
