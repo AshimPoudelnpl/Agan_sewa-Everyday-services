@@ -91,6 +91,25 @@ export const logoutUser = async (req, res, next) => {
   }
 };
 
+export const verifyToken = async (req, res, next) => {
+  try {
+    const token = req.cookies.token;
+    if (!token) {
+      return res.status(401).json({ message: "No token Provided" });
+    }
+    jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
+      if (err) {
+        res.clearCookie("token")
+      res.status(401).json({ message: "Invalid Token" });
+      }
+      console.log(req.user);
+      res.status(200).json({ message: "Token is valid", decoded });
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const addmanagerByAdmin = async (req, res, next) => {
   try {
     const { manager_name, manager_email, manager_phone, password, branch_id } =

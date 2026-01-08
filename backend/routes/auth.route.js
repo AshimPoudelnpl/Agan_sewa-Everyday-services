@@ -6,6 +6,7 @@ import {
   getmanagerByAdmin,
   loginUser,
   logoutUser,
+  verifyToken,
 } from "../controller/auth.controller.js";
 import islogin from "../middleware/auth/Islogin.js";
 import { uploadmanager, uploadstaff } from "../utils/multerHandler.js";
@@ -15,6 +16,7 @@ const authRouter = express.Router();
 
 authRouter.post("/login", loginUser);
 authRouter.post("/logout", islogin, logoutUser);
+authRouter.get("/verifyToken",islogin,verifyToken)
 authRouter.post(
   "/add-manager",
   islogin,

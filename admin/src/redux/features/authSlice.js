@@ -25,6 +25,12 @@ export const authAPIs = indexSlice.injectEndpoints({
       }),
       invalidatesTags: ["manager"],
     }),
+    verifyToken:builder.query({
+      query:()=>({
+        url:"/auth/verifyToken",
+        method:"GET"
+      })
+    }),
     getManager: builder.query({
       query: () => ({
         url: "/auth/get-manager",
@@ -53,6 +59,7 @@ export const {
   useLoginMutation, 
   useSignoutMutation,
   useAddManagerMutation,
+  useVerifyTokenQuery,
   useGetManagerQuery,
   useDeleteManagerMutation,
   useEditManagerMutation
