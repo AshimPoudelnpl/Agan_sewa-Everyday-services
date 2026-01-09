@@ -18,6 +18,8 @@ const ManagerManagement = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedProvince, setSelectedProvince] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingManagerId, setDeletingManagerId] = useState(null);
 
   const [selectedBranch, setSelectedBranch] = useState("");
   const [formData, setFormData] = useState({
@@ -71,8 +73,8 @@ const ManagerManagement = () => {
   const handleAction = async (action, manager) => {
     if (action.target.value === "Delete") {
       try {
-        await deleteManager(manager.id).unwrap();
-        toast.success(`${manager.manager_name} deleted successfully`);
+        setShowDeleteModal(true);
+        setDeletingManagerId(manager);
       } catch (err) {
         toast.error("Failed to delete manager", err);
       }
@@ -80,13 +82,16 @@ const ManagerManagement = () => {
       setIsEditing(true);
       setSelectedManager(manager);
       setFormData({
-
         name: manager.manager_name,
         email: manager.manager_email,
         phone: manager.manager_phone,
         password: "",
-        image: null
+        image: null,
       });
+      setSelectedProvince(manager.province_id);
+      setSelectedDistrict(manager.district_id);
+      setSelectedBranch(manager.branch_id);
+
       setShowModal(true);
     } else if (action.target.value === "View") {
       setSelectedManager(manager);
@@ -117,19 +122,32 @@ const ManagerManagement = () => {
       }
 
       if (isEditing) {
-        const result = await editManager({ id: selectedManager.id, data: formDataToSend }).unwrap();
+        const result = await editManager({
+          id: selectedManager.id,
+          data: formDataToSend,
+        }).unwrap();
         toast.success(result.message);
       } else {
         const result = await addManager(formDataToSend).unwrap();
         toast.success(result.message);
       }
-      
+
       setShowModal(false);
       setIsEditing(false);
-      setFormData({ name: "", email: "", phone: "", password: "", image: null });
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        password: "",
+        image: null,
+      });
     } catch (error) {
       toast.error(error.data?.message || "Failed to save manager");
     }
+  };
+  const handleDelete = async () => {
+    await deleteManager(deletingManagerId.id).unwrap();
+    toast.success(`${deletingManagerId.manager_name} deleted successfully`);
   };
 
   return (
@@ -141,7 +159,16 @@ const ManagerManagement = () => {
         <button
           onClick={() => {
             setIsEditing(false);
-            setFormData({ name: "", email: "", phone: "", password: "", image: null });
+            setSelectedProvince("");
+            setSelectedDistrict("");
+            setSelectedBranch("");
+            setFormData({
+              name: "",
+              email: "",
+              phone: "",
+              password: "",
+              image: null,
+            });
             setShowModal(true);
           }}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
@@ -289,26 +316,54 @@ const ManagerManagement = () => {
                 className="w-20 h-20 rounded-full object-cover"
               />
               <div>
-                <h3 className="text-xl font-semibold">{selectedManager.manager_name}</h3>
+                <h3 className="text-xl font-semibold">
+                  {selectedManager.manager_name}
+                </h3>
                 <p className="text-gray-600">Manager</p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Email</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  Email
+                </label>
                 <p className="text-gray-900">{selectedManager.manager_email}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Phone</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  Phone
+                </label>
                 <p className="text-gray-900">{selectedManager.manager_phone}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Branch</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  Branch
+                </label>
                 <p className="text-gray-900">{selectedManager.branch_name}</p>
               </div>
             </div>
           </div>
         )}
+      </DetailsModal>
+
+      <DetailsModal
+        show={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Delete Manager"
+        size="md"
+      >
+        <div>
+          <p>Are you sure you want to delete this manager?</p>
+          <strong>{deletingManagerId?.manager_email}</strong>
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              className="bg-red-500 text-white px-6 py-2 rounded-full font-semibold transition-all duration-300 ease-in-out hover:bg-red-600 hover:scale-105 hover:shadow-lg active:scale-95"
+              onClick={handleDelete}
+            >
+              Delete
+            </button>
+          </div>
+        </div>
       </DetailsModal>
 
       <div className="w-full bg-white shadow rounded-lg overflow-hidden">

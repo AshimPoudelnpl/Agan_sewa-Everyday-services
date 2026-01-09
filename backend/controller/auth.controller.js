@@ -65,6 +65,7 @@ LEFT JOIN branch b
       httpOnly: true,
       secure: false, // set true in production (HTTPS)
       sameSite: "strict",
+      maxAge: 10*24*60*60*1000, //store in browser
     });
 
     res.status(200).json({
@@ -94,13 +95,14 @@ export const logoutUser = async (req, res, next) => {
 export const verifyToken = async (req, res, next) => {
   try {
     const token = req.cookies.token;
+
     if (!token) {
-      return res.status(401).json({ message: "No token Provided" });
+      return res.status(401).json({ message: "No token Provided!!!" });
     }
     jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
       if (err) {
-        res.clearCookie("token")
-      res.status(401).json({ message: "Invalid Token" });
+        res.clearCookie("token");
+        res.status(401).json({ message: "Invalid Token" });
       }
       console.log(req.user);
       res.status(200).json({ message: "Token is valid", decoded });

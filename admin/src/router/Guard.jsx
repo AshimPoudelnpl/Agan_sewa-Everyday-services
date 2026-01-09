@@ -10,14 +10,11 @@ const Guard = ({ children }) => {
   const isAuth = useSelector((state) => state.user.isAuth);
   const dispatch = useDispatch();
   const { data, error } = useVerifyTokenQuery();
-  console.log(data);
 
-  const expDate = new Date(data?.decoded.exp * 1000);
-  const currentDate = new Date(data?.decoded.iat * 1000);
-  console.log(expDate);
-  console.log(currentDate);
   useEffect(() => {
-    if (data?.decoded.exp) {
+    if (error || data?.status === 401) {
+      dispatch(logout());
+    } else if (data?.decoded.exp) {
       const isExpired = data.decoded.exp * 1000 < Date.now();
       if (isExpired) {
         dispatch(logout());

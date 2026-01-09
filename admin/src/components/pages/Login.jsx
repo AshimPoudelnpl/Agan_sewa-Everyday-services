@@ -32,7 +32,7 @@ const Login = () => {
 
     try {
       const result = await login(formData).unwrap();
-      toast.success(result.message)
+      toast.success(result.message);
       dispatch(setUser(result.user));
       navigate("/admin/dashboard");
     } catch (err) {
@@ -40,11 +40,10 @@ const Login = () => {
     }
   };
   useEffect(() => {
-    if(isAuth) {
+    if (isAuth) {
       navigate("/admin/dashboard");
     }
   }, [isAuth, navigate]);
-  
 
   return (
     <div className="h-screen flex justify-center items-center bg-gray-100">

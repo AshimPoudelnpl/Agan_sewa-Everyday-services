@@ -15,8 +15,8 @@ import { authorizeRoles } from "../middleware/auth/AuthorizeRoles.js";
 const authRouter = express.Router();
 
 authRouter.post("/login", loginUser);
-authRouter.post("/logout", islogin, logoutUser);
-authRouter.get("/verifyToken",islogin,verifyToken)
+authRouter.post("/logout", logoutUser);
+authRouter.get("/verifyToken", verifyToken);
 authRouter.post(
   "/add-manager",
   islogin,
